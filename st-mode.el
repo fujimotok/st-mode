@@ -1,4 +1,4 @@
-;;; iec61131-mode.el --- A mode for Programing Lanuguages of IEC61131-3
+;;; st-mode.el --- A mode for Programing Lanuguages of IEC61131-3
 ;;;
 ;;;
 ;;;
@@ -10,17 +10,17 @@
 
 (require 'rx)
 
-(defvar iec61131-mode-map nil
-  "Key map for 'iec61131-mode`")
+(defvar st-mode-map nil
+  "Key map for 'st-mode`")
 
-(setq iec61131-mode-map
+(setq st-mode-map
       (let ((map (make-keymap)))
 	(define-key map "\C-j" 'newline-and-indent)
 	map))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
-             '("\\.st\\'" . iec61131-mode))
+             '("\\.st\\'" . st-mode))
 
 
 (defun iec61131-regex-endswith (seq)
@@ -133,7 +133,7 @@
 
 
 (defun iec61131-indent-line ()
-  "Identation function for iec61131-mode."
+  "Identation function for st-mode."
   (interactive)
   (beginning-of-line)
   (let ((not-indented t)
@@ -154,10 +154,10 @@
 		(current-indentation))))))
     (indent-line-to cur-indent)))
 
-(defvar iec61131-mode-syntax-table nil
+(defvar st-mode-syntax-table nil
   "IEC 61131 Syntax Table.")
 
-(setq iec61131-mode-syntax-table
+(setq st-mode-syntax-table
       (let ((table (make-syntax-table)))
 	(modify-syntax-entry ?_ "w" table)
 	(modify-syntax-entry ?/ ". 12b" table)
@@ -182,16 +182,16 @@
 
 
 (define-derived-mode
-  iec61131-mode fundamental-mode
+  st-mode fundamental-mode
   "IEC 61131"
   "A major mode for editing Structured Text files after IEC 61131-3"
-  :syntax-table iec61131-mode-syntax-table
+  :syntax-table st-mode-syntax-table
   (setq-local comment-start "(*")
   (setq-local comment-end "*)")
   (setq-local font-lock-defaults
               '(iec61131-font-lock-keywords nil t)) ;set CASE-FOLD t
   (setq-local indent-line-function 'iec61131-indent-line))
 
-(provide 'iec61131-mode)
+(provide 'st-mode)
 
-;;; iec61131-mode.el ends here
+;;; st-mode.el ends here

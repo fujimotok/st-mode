@@ -1,4 +1,4 @@
-iec61131-mode
+st-mode
 =======
 
 An emacs mode for Structured Text (IEC61131-3)
