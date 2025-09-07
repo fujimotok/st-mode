@@ -11,7 +11,7 @@
 (require 'rx)
 
 (defvar st-mode-map nil
-  "Key map for 'st-mode`")
+  "Key map for `st-mode`")
 
 (setq st-mode-map
       (let ((map (make-keymap)))
@@ -183,7 +183,7 @@
 
 (define-derived-mode
   st-mode fundamental-mode
-  "IEC 61131"
+  "ST"
   "A major mode for editing Structured Text files after IEC 61131-3"
   :syntax-table st-mode-syntax-table
   (setq-local comment-start "(*")
