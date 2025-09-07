@@ -88,13 +88,13 @@
 	    "VAR_EXTERNAL" "VAR_GLOBAL" "VAR_INPUT" "VAR_IN_OUT"
 	    "VAR_TEMP" "WHILE" "WITH"))
 
-(defvar iec61131-multi-line-comment-regex nil
-  "Regex for multi-line comments.")
+(defvar iec61131-single-line-comment-regex nil
+  "Regex for single-line comments //.")
 (setq iec61131-single-line-comment-regex
       (rx (group "//" (?? not-newline) "\n")))
 
-(defvar iec61131-single-line-comment-regex nil
-  "Regex for single-line comments //.")
+(defvar iec61131-multi-line-comment-regex nil
+  "Regex for multi-line comments.")
 (setq iec61131-multi-line-comment-regex
       (rx (or (group "/*" (?? anything) "*/")
 	      (group "(*" (?? anything) "*)"))))
@@ -185,9 +185,9 @@
 ;;;
 ;;; major-mode-provide
 ;;;
-(define-derived-mode
-  st-mode fundamental-mode
-  "ST"
+
+;;;###autoload
+(define-derived-mode st-mode fundamental-mode "ST"
   "A major mode for editing Structured Text files after IEC 61131-3"
   :syntax-table st-mode-syntax-table
   (setq-local comment-start "(*")
