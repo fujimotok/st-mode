@@ -10,18 +10,21 @@
 
 (require 'rx)
 
+;;; defvars --------------------------------------------------------------------
+
+;;;
+;;; mode-map
+;;;
 (defvar st-mode-map nil
   "Key map for `st-mode`")
-
 (setq st-mode-map
       (let ((map (make-keymap)))
 	(define-key map "\C-j" 'newline-and-indent)
 	map))
 
-;;;###autoload
-(add-to-list 'auto-mode-alist
-             '("\\.st\\'" . st-mode))
-
+;;;
+;;; indent-regex
+;;;
 (defun iec61131-regex-or ()
   ""
   "\\|")
@@ -56,12 +59,9 @@
        (iec61131-regex-or)
        (iec61131-regex-case-label)))
 
-(defvar iec61131-indent-regex-mid nil)
-(setq iec61131-indent-regex-mid
-  "^[ \t]*[0-9]+:[ \t]*\\|^[ \t]*ELSE[ \t]*$")
-
-
-
+;;;
+;;; font-lock-keywords
+;;;
 (defvar iec61131-keywords nil "Keywords to be highlighted.")
 (setq iec61131-keywords
       (list "ANY" "ANY_BIT" "ANY_DATE" "ANY_DERIVED" "VAR_OUTPUT"
@@ -88,33 +88,29 @@
 	    "VAR_EXTERNAL" "VAR_GLOBAL" "VAR_INPUT" "VAR_IN_OUT"
 	    "VAR_TEMP" "WHILE" "WITH"))
 
-
 (defvar iec61131-multi-line-comment-regex nil
   "Regex for multi-line comments.")
-(defvar iec61131-single-line-comment-regex nil
-  "Regex for single-line comments //.")
-
 (setq iec61131-single-line-comment-regex
       (rx (group "//" (?? not-newline) "\n")))
 
+(defvar iec61131-single-line-comment-regex nil
+  "Regex for single-line comments //.")
 (setq iec61131-multi-line-comment-regex
       (rx (or (group "/*" (?? anything) "*/")
 	      (group "(*" (?? anything) "*)"))))
 
 (defvar iec61131-string-regex nil
   "Regex for string literals.")
-
 (setq iec61131-string-regex
       (rx (or (group "\"" (?? anything) "\"")
 	      (group ?' (?? anything) ?'))))
 
 (defvar iec61131-time-regex
   nil "\\(TIME\\|T\\)[#]\\([0-9_]+\\(\\.[0-9]+\\)?\\(ms\\|s\\|m\\|h\\|d\\)\\)+.")
-
 (setq iec61131-time-regex
       (rx word-start (or "TIME" "T") "#" (group (one-or-more (one-or-more digit)
-					   (opt ?. (one-or-more digit))
-					   (or "ms" ?s ?h ?m ?d))) word-end))
+					                     (opt ?. (one-or-more digit))
+					                     (or "ms" ?s ?h ?m ?d))) word-end))
 
 (defvar iec61131-date-regex nil "")
 (setq iec61131-date-regex
@@ -132,18 +128,36 @@
 
 (defvar iec61131-font-lock-keywords "" nil)
 (setq iec61131-font-lock-keywords
-  `(
-    (,iec61131-multi-line-comment-regex . font-lock-comment-face)
-    (,iec61131-string-regex . font-lock-constant-face)
-    (,iec61131-time-regex . font-lock-constant-face)
-    (,iec61131-datetime-regex . font-lock-constant-face)
-    (,iec61131-date-regex . font-lock-constant-face)
-    ("\\(TIME_OF_DAY\\|TOD\\)#[012][0-9]:[0-5][0-9]:[0-5][0-9]\\(\\.[0-9]\\{,3\\}\\)"
-     . font-lock-constant-face)
-    ("\\<.*#.*\\>" . font-lock-constant-face)
-    ("\\<[0-9]+\\(\\.[0-9]+\\)?\\>" . font-lock-constant-face)
-    (,iec61131-bool-regex  . font-lock-constant-face)
-    (,(concat "\\<" (regexp-opt iec61131-keywords) "\\>") . font-lock-builtin-face)))
+      `(
+        (,iec61131-multi-line-comment-regex . font-lock-comment-face)
+        (,iec61131-string-regex . font-lock-constant-face)
+        (,iec61131-time-regex . font-lock-constant-face)
+        (,iec61131-datetime-regex . font-lock-constant-face)
+        (,iec61131-date-regex . font-lock-constant-face)
+        ("\\(TIME_OF_DAY\\|TOD\\)#[012][0-9]:[0-5][0-9]:[0-5][0-9]\\(\\.[0-9]\\{,3\\}\\)"
+         . font-lock-constant-face)
+        ("\\<.*#.*\\>" . font-lock-constant-face)
+        ("\\<[0-9]+\\(\\.[0-9]+\\)?\\>" . font-lock-constant-face)
+        (,iec61131-bool-regex  . font-lock-constant-face)
+        (,(concat "\\<" (regexp-opt iec61131-keywords) "\\>") . font-lock-builtin-face)))
+
+;;;
+;;; syntax-teble
+;;;
+(defvar st-mode-syntax-table nil
+  "IEC 61131 Syntax Table.")
+(setq st-mode-syntax-table
+      (let ((table (make-syntax-table)))
+	(modify-syntax-entry ?_ "w" table)
+	(modify-syntax-entry ?/ ". 12b" table)
+	(modify-syntax-entry 40 ". 1n" table) ;; (
+	(modify-syntax-entry 41 ". 4n" table) ;; )
+	(modify-syntax-entry ?* ". 23n" table)
+	(modify-syntax-entry ?\n "> b" table)
+	table))
+
+
+;;; defuns ---------------------------------------------------------------------
 
 (defun iec61131-indent-line ()
   "Identation function for st-mode."
@@ -168,33 +182,9 @@
 		(current-indentation))))))
     (indent-line-to cur-indent)))
 
-(defvar st-mode-syntax-table nil
-  "IEC 61131 Syntax Table.")
-
-(setq st-mode-syntax-table
-      (let ((table (make-syntax-table)))
-	(modify-syntax-entry ?_ "w" table)
-	(modify-syntax-entry ?/ ". 12b" table)
-	(modify-syntax-entry 40 ". 1n" table) ;; (
-	(modify-syntax-entry 41 ". 4n" table) ;; )
-	(modify-syntax-entry ?* ". 23n" table)
-	(modify-syntax-entry ?\n "> b" table)
-	table))
-
-(defun iec61131-insert-if (&optional condition then else)
-  (interactive)
-  (let ((condition (read-string "Condition:" condition))
-	(then (read-string "Then:" then))
-	(else (read-string "Else:" else)))
-    (insert "IF ")
-    (insert condition)
-    (insert "THEN\n")
-    (insert then)
-    (insert "\nELSE\n")
-    (insert else)
-    (insert "END_IF")))
-
-
+;;;
+;;; major-mode-provide
+;;;
 (define-derived-mode
   st-mode fundamental-mode
   "ST"
@@ -205,6 +195,10 @@
   (setq-local font-lock-defaults
               '(iec61131-font-lock-keywords nil t)) ;set CASE-FOLD t
   (setq-local indent-line-function 'iec61131-indent-line))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             '("\\.st\\'" . st-mode))
 
 (provide 'st-mode)
 
