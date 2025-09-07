@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: if block
+# key: if
+# --
+IF ${1:condition} THEN
+  ${0:(* statements *)}
+ELSIF ${2:condition} THEN
+  ${0:(* statements *)}
+ELSE ${3:condition}
+  ${0:(* statements *)}
+END_IF;

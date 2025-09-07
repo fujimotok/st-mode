@@ -55,7 +55,7 @@
 (defvar iec61131-indent-regex-1 nil "Regex for indentation decrement.")
 (setq iec61131-indent-regex-1
       (concat
-       (iec61131-regex-startswith '("END_" "ELSE" ")" "*)" "}" "]"))
+       (iec61131-regex-startswith '("END_" "ELSE" "ELSIF" "UNTIL" ")" "*)" "}" "]"))
        (iec61131-regex-or)
        (iec61131-regex-case-label)))
 
@@ -74,7 +74,7 @@
 	    "ULINT" "USINT" "WORD" "WSTRING" "AT"
 	    "BY" "CASE" "COLON" "CONFIGURATION"
 	    "CONSTANT" "DATE" "DO" "DT"
-	    "ELSE" "ELSEIF" "END_CASE" "END_CONFIGURATION"
+	    "ELSE" "ELSIF" "END_CASE" "END_CONFIGURATION"
 	    "END_FOR" "END_FUNCTION" "END_FUNCTION_BLOCK"
 	    "END_IF" "END_PROGRAM" "END_REPEAT" "END_RESOURCE"
 	    "END_STRUCT" "END_TYPE" "END_VAR" "END_WHILE"
@@ -156,6 +156,11 @@
 	(modify-syntax-entry ?\n "> b" table)
 	table))
 
+(defvar st-mode-snippet-source-dir
+  (expand-file-name "yas-st-mode"
+                    (file-name-directory (or load-file-name
+                                             (buffer-file-name)))))
+
 
 ;;; defuns ---------------------------------------------------------------------
 
@@ -181,6 +186,36 @@
 		  (+ (current-indentation) tab-width)
 		(current-indentation))))))
     (indent-line-to cur-indent)))
+
+;;;###autoload
+(defun st-mode-install-yasnippets ()
+  "Copy .yasnippet files from yas-st-mode/ to user's yasnippet st-mode directory."
+  (interactive)
+  (require 'yasnippet)
+  (let* ((source-dir st-mode-snippet-source-dir)
+         (target-base (if (listp yas-snippet-dirs)
+                          (car yas-snippet-dirs)
+                        yas-snippet-dirs))
+         (target-dir (expand-file-name "st-mode" target-base)))
+
+    ;; Check directory existence
+    (unless (file-directory-p source-dir)
+      (error "Source directory %s does not exist" source-dir))
+
+    ;;Create a target directory
+    (unless (file-directory-p target-dir)
+      (make-directory target-dir t)
+      (message "Created target directory: %s" target-dir))
+
+    ;; Copy files
+    (dolist (file (directory-files source-dir t "\\.yasnippet$"))
+      (let ((target-file (expand-file-name (file-name-nondirectory file) target-dir)))
+        (copy-file file target-file t)
+        (message "Copied %s → %s" file target-file)))
+
+    (yas-reload-all)
+    (message "st-mode snippets copied and yasnippet reloaded.")))
+
 
 ;;;
 ;;; major-mode-provide
