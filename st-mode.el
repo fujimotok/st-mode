@@ -22,30 +22,44 @@
 (add-to-list 'auto-mode-alist
              '("\\.st\\'" . st-mode))
 
+(defun iec61131-regex-or ()
+  ""
+  "\\|")
 
 (defun iec61131-regex-endswith (seq)
   ""
-  (let ((words (regexp-opt seq 'words)))
-    (concat ".*" words "$")))
+  (let ((words (regexp-opt seq)))
+    (concat ".*" words ".*$")))
 
 (defun iec61131-regex-startswith (seq)
   ""
-  (let ((words (regexp-opt seq 'words)))
-    (concat "[ \t]*" words ".*")))
+  (let ((words (regexp-opt seq)))
+    (concat "[ \t]*" words)))
 
+(defun iec61131-regex-case-label ()
+  ""
+  "^.*:[^;]*$")
 
 (defvar iec61131-indent-regex+1 nil "Regex for indentation increment.")
 (setq iec61131-indent-regex+1
       (concat
-       (iec61131-regex-endswith  '("DO" "THEN" "ELSE"))
-       "\\|"
-       (iec61131-regex-startswith
-	'("FUNCTION_BLOCK" "PROGRAM" "CONFIGURATION" "VAR"
-	  "VAR_INPUT" "VAR_OUTPUT"))))
+       (iec61131-regex-endswith '("THEN" "DO" "ELSE" "(" "(*" "{" "["))
+       (iec61131-regex-or)
+       (iec61131-regex-startswith '("VAR"))
+       (iec61131-regex-or)
+       (iec61131-regex-case-label)))
 
 (defvar iec61131-indent-regex-1 nil "Regex for indentation decrement.")
 (setq iec61131-indent-regex-1
-      "[ \t]*\\<\\(END_.*\\|ELSE\\)\\>[ \t]*")
+      (concat
+       (iec61131-regex-startswith '("END_" "ELSE" ")" "*)" "}" "]"))
+       (iec61131-regex-or)
+       (iec61131-regex-case-label)))
+
+(defvar iec61131-indent-regex-mid nil)
+(setq iec61131-indent-regex-mid
+  "^[ \t]*[0-9]+:[ \t]*\\|^[ \t]*ELSE[ \t]*$")
+
 
 
 (defvar iec61131-keywords nil "Keywords to be highlighted.")
@@ -131,7 +145,6 @@
     (,iec61131-bool-regex  . font-lock-constant-face)
     (,(concat "\\<" (regexp-opt iec61131-keywords) "\\>") . font-lock-builtin-face)))
 
-
 (defun iec61131-indent-line ()
   "Identation function for st-mode."
   (interactive)
@@ -146,7 +159,8 @@
 	     ;; current line is deindentation
 	     ((looking-at-p iec61131-indent-regex-1)
 	      (forward-line -1) ;; do not understand this
-	      (- (current-indentation) tab-width))
+	      (max 0
+                   (- (current-indentation) tab-width)))
 	     (t
 	      (forward-line -1)
 	      (if (looking-at-p iec61131-indent-regex+1)
